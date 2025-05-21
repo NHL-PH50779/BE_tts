@@ -27,7 +27,7 @@ productRouter.patch("/:id", updateProduct);
 productRouter.delete("/:id", deleteProduct);
 
 // Xóa mềm (soft-delete) sản phẩm
-productRouter.delete("/soft-delete/:id", softDeleteProduct);
+productRouter.patch("/deactivate/:id", softDeleteProduct);
 
 // Khôi phục sản phẩm đã soft-delete
 productRouter.patch("/restore/:id", restoreProduct);
