@@ -28,7 +28,23 @@ export const getBrands = async (req, res, next) => {
     // Xây dựng bộ lọc
     const filter = includeDeleted === "true" ? {} : { is_active: true };
     if (search) {
-      filter.$text = { $search: search };
+      // Kiểm tra xem có text index không
+      let useTextSearch = true;
+      try {
+        await Brand.findOne({ $text: { $search: search } }).limit(1).exec();
+      } catch (error) {
+        if (error.message.includes("text index required")) {
+          useTextSearch = false;
+        } else {
+          throw error;
+        }
+      }
+
+      if (useTextSearch) {
+        filter.$text = { $search: search };
+      } else {
+        filter.name = { $regex: search, $options: "i" };
+      }
     }
 
     // Pagination
@@ -37,6 +53,18 @@ export const getBrands = async (req, res, next) => {
     const brands = await Brand.find(filter)
       .skip(skip)
       .limit(limit);
+
+    // Kiểm tra kết quả tìm kiếm
+    if (search && total === 0) {
+      res.success(
+        {
+          brands: [],
+          pagination: { page, limit, total, totalPages: 0 },
+        },
+        "Không tìm thấy thương hiệu phù hợp"
+      );
+      return;
+    }
 
     // Trả về dữ liệu với metadata
     res.success(
@@ -56,7 +84,7 @@ export const getBrands = async (req, res, next) => {
   }
 };
 
-// ... Các hàm khác giữ nguyên ...
+// Lấy thương hiệu theo id
 export const getBrandById = async (req, res, next) => {
   try {
     const brand = await Brand.findById(req.params.id);
@@ -71,6 +99,7 @@ export const getBrandById = async (req, res, next) => {
   }
 };
 
+// Tạo thương hiệu mới
 export const createBrand = async (req, res, next) => {
   try {
     const newBrand = new Brand(req.body);
@@ -81,6 +110,7 @@ export const createBrand = async (req, res, next) => {
   }
 };
 
+// Cập nhật thương hiệu theo id
 export const updateBrand = async (req, res, next) => {
   try {
     const updatedBrand = await Brand.findByIdAndUpdate(
@@ -99,6 +129,7 @@ export const updateBrand = async (req, res, next) => {
   }
 };
 
+// Xóa thương hiệu vĩnh viễn
 export const deleteBrand = async (req, res, next) => {
   try {
     const deletedBrand = await Brand.findByIdAndDelete(req.params.id);
@@ -113,6 +144,7 @@ export const deleteBrand = async (req, res, next) => {
   }
 };
 
+// Xóa mềm thương hiệu (is_active = false)
 export const softDeleteBrand = async (req, res, next) => {
   try {
     const updatedBrand = await Brand.findByIdAndUpdate(
@@ -131,6 +163,7 @@ export const softDeleteBrand = async (req, res, next) => {
   }
 };
 
+// Khôi phục thương hiệu
 export const restoreBrand = async (req, res, next) => {
   try {
     const updatedBrand = await Brand.findByIdAndUpdate(

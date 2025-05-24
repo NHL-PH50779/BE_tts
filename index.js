@@ -8,7 +8,8 @@ import { PORT } from "./src/configs/enviroments.js";
 import jsonValid from "./src/middlewares/jsonInvalid.js";
 import setupSwagger from "./src/configs/swaggerConfig.js";
 import { connectDb } from "./src/configs/db.js";
-
+import dotenv from "dotenv";
+dotenv.config();
 const app = express();
 
 app.use(express.json());

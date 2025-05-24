@@ -7,7 +7,7 @@ export const getProducts = async (req, res, next) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const search = req.query.search || "";
-    const includeDeleted = req.query.includeDeleted === "true";
+    const includeDeleted = req.query.includeDeleted;
 
     if (page < 1 || limit < 1) {
       const error = new Error("Page và limit phải là số dương");
@@ -19,11 +19,32 @@ export const getProducts = async (req, res, next) => {
       error.statusCode = 400;
       throw error;
     }
+    if (includeDeleted && !["true", "false"].includes(includeDeleted)) {
+      const error = new Error("includeDeleted phải là 'true' hoặc 'false'");
+      error.statusCode = 400;
+      throw error;
+    }
 
     // Xây dựng bộ lọc
-    const filter = includeDeleted ? {} : { is_active: true };
+    const filter = includeDeleted === "true" ? {} : { is_active: true };
     if (search) {
-      filter.$text = { $search: search };
+      // Kiểm tra xem có text index không bằng cách thử một truy vấn nhỏ
+      let useTextSearch = true;
+      try {
+        await Product.findOne({ $text: { $search: search } }).limit(1).exec();
+      } catch (error) {
+        if (error.message.includes("text index required")) {
+          useTextSearch = false;
+        } else {
+          throw error; // Ném lại các lỗi khác
+        }
+      }
+
+      if (useTextSearch) {
+        filter.$text = { $search: search };
+      } else {
+        filter.name = { $regex: search, $options: "i" };
+      }
     }
 
     // Pagination
@@ -34,6 +55,18 @@ export const getProducts = async (req, res, next) => {
       .populate("category_id", "name")
       .skip(skip)
       .limit(limit);
+
+    // Kiểm tra kết quả tìm kiếm
+    if (search && total === 0) {
+      res.success(
+        {
+          products: [],
+          pagination: { page, limit, total, totalPages: 0 },
+        },
+        "Không tìm thấy sản phẩm phù hợp"
+      );
+      return;
+    }
 
     // Trả về dữ liệu với metadata
     res.success(

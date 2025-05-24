@@ -8,6 +8,14 @@
 	"host": "localhost:8888/api",
 	"basePath": "/",
 	"schemes": ["http"],
+	"securityDefinitions": {
+		"BearerAuth": {
+			"type": "apiKey",
+			"name": "Authorization",
+			"in": "header",
+			"description": "Enter JWT token in format: Bearer <token>"
+		}
+	},
 	"paths": {
 		"/brands/": {
 			"get": {
@@ -55,7 +63,7 @@
 					{
 						"name": "id",
 						"in": "path",
-						"required": true,
+						
 						"type": "string"
 					},
 					{
@@ -426,12 +434,18 @@
 		},
 		"/products/": {
 			"get": {
-				"description": "",
+				"description": "Lấy danh sách sản phẩm, có thể tìm kiếm theo tên.",
 				"parameters": [
 					{
 						"name": "includeDeleted",
 						"in": "query",
 						"type": "string"
+					},
+					{
+						"name": "search",
+						"in": "query",
+						"type": "string",
+						"description": "Tìm kiếm theo tên sản phẩm"
 					}
 				],
 				"responses": {
@@ -878,7 +892,7 @@
 		},
 		"/auth/register": {
 			"post": {
-				"description": "",
+				"description": "Create a new user account and return access/refresh tokens",
 				"parameters": [
 					{
 						"name": "body",
@@ -887,10 +901,36 @@
 							"type": "object",
 							"properties": {
 								"email": {
-									"example": "any"
+									"type": "string",
+									"example": "user@example.com"
 								},
 								"password": {
-									"example": "any"
+									"type": "string",
+									"example": "password123"
+								},
+								"name": {
+									"type": "string",
+									"example": "John Doe"
+								},
+								"address": {
+									"type": "string",
+									"example": "123 Street"
+								},
+								"phone": {
+									"type": "string",
+									"example": "1234567890"
+								},
+								"avatar": {
+									"type": "string",
+									"example": "https://example.com/avatar.jpg"
+								},
+								"date_of_birth": {
+									"type": "string",
+									"example": "1990-01-01"
+								},
+								"role": {
+									"type": "string",
+									"example": "user"
 								}
 							}
 						}
@@ -898,14 +938,64 @@
 				],
 				"responses": {
 					"201": {
-						"description": "Created"
+						"description": "Created",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"success": {
+									"type": "boolean",
+									"example": true
+								},
+								"statusCode": {
+									"type": "integer",
+									"example": 201
+								},
+								"message": {
+									"type": "string",
+									"example": "Đăng ký thành công"
+								},
+								"data": {
+									"type": "object",
+									"properties": {
+										"user": {
+											"type": "object",
+											"properties": {
+												"id": {
+													"type": "string",
+													"example": "507f1f77bcf86cd799439011"
+												},
+												"email": {
+													"type": "string",
+													"example": "user@example.com"
+												},
+												"role": {
+													"type": "string",
+													"example": "user"
+												}
+											}
+										},
+										"accessToken": {
+											"type": "string",
+											"example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+										},
+										"refreshToken": {
+											"type": "string",
+											"example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request"
 					}
 				}
 			}
 		},
 		"/auth/login": {
 			"post": {
-				"description": "",
+				"description": "Authenticate user and return access/refresh tokens",
 				"parameters": [
 					{
 						"name": "body",
@@ -914,10 +1004,12 @@
 							"type": "object",
 							"properties": {
 								"email": {
-									"example": "any"
+									"type": "string",
+									"example": "user@example.com"
 								},
 								"password": {
-									"example": "any"
+									"type": "string",
+									"example": "password123"
 								}
 							}
 						}
@@ -925,34 +1017,157 @@
 				],
 				"responses": {
 					"200": {
-						"description": "OK"
+						"description": "OK",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"success": {
+									"type": "boolean",
+									"example": true
+								},
+								"statusCode": {
+									"type": "integer",
+									"example": 200
+								},
+								"message": {
+									"type": "string",
+									"example": "Đăng nhập thành công"
+								},
+								"data": {
+									"type": "object",
+									"properties": {
+										"user": {
+											"type": "object",
+											"properties": {
+												"id": {
+													"type": "string",
+													"example": "507f1f77bcf86cd799439011"
+												},
+												"email": {
+													"type": "string",
+													"example": "user@example.com"
+												},
+												"role": {
+													"type": "string",
+													"example": "user"
+												}
+											}
+										},
+										"accessToken": {
+											"type": "string",
+											"example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+										},
+										"refreshToken": {
+											"type": "string",
+											"example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized"
 					}
 				}
 			}
 		},
 		"/auth/logout": {
 			"post": {
-				"description": "",
+				"description": "Invalidate user tokens",
+				"security": [
+					{
+						"BearerAuth": []
+					}
+				],
 				"responses": {
 					"200": {
-						"description": "OK"
+						"description": "OK",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"success": {
+									"type": "boolean",
+									"example": true
+								},
+								"statusCode": {
+									"type": "integer",
+									"example": 200
+								},
+								"message": {
+									"type": "string",
+									"example": "Đăng xuất thành công"
+								},
+								"data": {
+									"type": "object",
+									"example": {}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized"
 					}
 				}
 			}
 		},
 		"/auth/refresh-token": {
 			"post": {
-				"description": "",
+				"description": "Generate new access token using refresh token",
+				"parameters": [
+					{
+						"name": "body",
+						"in": "body",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"refreshToken": {
+									"type": "string",
+									"example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+								}
+							}
+						}
+					}
+				],
 				"responses": {
 					"200": {
-						"description": "OK"
+						"description": "OK",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"success": {
+									"type": "boolean",
+									"example": true
+								},
+								"statusCode": {
+									"type": "integer",
+									"example": 200
+								},
+								"message": {
+									"type": "string",
+									"example": "Tạo access token mới thành công"
+								},
+								"data": {
+									"type": "object",
+									"properties": {
+										"accessToken": {
+											"type": "string",
+											"example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized"
 					}
 				}
 			}
 		},
 		"/auth/forgot-password": {
 			"post": {
-				"description": "",
+				"description": "Send password reset email",
 				"parameters": [
 					{
 						"name": "body",
@@ -961,7 +1176,8 @@
 							"type": "object",
 							"properties": {
 								"email": {
-									"example": "any"
+									"type": "string",
+									"example": "user@example.com"
 								}
 							}
 						}
@@ -969,14 +1185,38 @@
 				],
 				"responses": {
 					"200": {
-						"description": "OK"
+						"description": "OK",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"success": {
+									"type": "boolean",
+									"example": true
+								},
+								"statusCode": {
+									"type": "integer",
+									"example": 200
+								},
+								"message": {
+									"type": "string",
+									"example": "Email đặt lại mật khẩu đã được gửi"
+								},
+								"data": {
+									"type": "object",
+									"example": {}
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found"
 					}
 				}
 			}
 		},
 		"/auth/reset-password/{resetToken}": {
 			"get": {
-				"description": "",
+				"description": "Validate reset password token",
 				"parameters": [
 					{
 						"name": "resetToken",
@@ -987,17 +1227,108 @@
 				],
 				"responses": {
 					"200": {
-						"description": "OK"
+						"description": "OK",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"success": {
+									"type": "boolean",
+									"example": true
+								},
+								"statusCode": {
+									"type": "integer",
+									"example": 200
+								},
+								"message": {
+									"type": "string",
+									"example": "Token hợp lệ"
+								},
+								"data": {
+									"type": "object",
+									"example": {}
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request"
 					}
 				}
 			}
 		},
 		"/auth/profile": {
 			"get": {
-				"description": "",
+				"description": "Retrieve authenticated user information",
+				"security": [
+					{
+						"BearerAuth": []
+					}
+				],
 				"responses": {
 					"200": {
-						"description": "OK"
+						"description": "OK",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"success": {
+									"type": "boolean",
+									"example": true
+								},
+								"statusCode": {
+									"type": "integer",
+									"example": 200
+								},
+								"message": {
+									"type": "string",
+									"example": "Lấy thông tin người dùng thành công"
+								},
+								"data": {
+									"type": "object",
+									"properties": {
+										"user": {
+											"type": "object",
+											"properties": {
+												"id": {
+													"type": "string",
+													"example": "507f1f77bcf86cd799439011"
+												},
+												"email": {
+													"type": "string",
+													"example": "user@example.com"
+												},
+												"name": {
+													"type": "string",
+													"example": "John Doe"
+												},
+												"address": {
+													"type": "string",
+													"example": "123 Street"
+												},
+												"phone": {
+													"type": "string",
+													"example": "1234567890"
+												},
+												"avatar": {
+													"type": "string",
+													"example": "https://example.com/avatar.jpg"
+												},
+												"date_of_birth": {
+													"type": "string",
+													"example": "1990-01-01"
+												},
+												"role": {
+													"type": "string",
+													"example": "user"
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized"
 					}
 				}
 			}
