@@ -455,21 +455,55 @@
 				}
 			},
 			"post": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "body",
-						"in": "body",
-						"schema": {
-							"type": "object",
-							"properties": {
-								"title": {
-									"example": "any"
-								}
-							}
-						}
-					}
-				],
+  "description": "Create a new product",
+  "parameters": [
+    {
+      "name": "body",
+      "in": "body",
+      "required": true,
+      "schema": {
+        "type": "object",
+        "required": ["title", "price", "category_id", "brand_id", "stock"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Product name",
+            "example": "Smartphone XYZ"
+          },
+          "description": {
+            "type": "string",
+            "description": "Product description",
+            "example": "A high-performance smartphone with 128GB storage"
+          },
+          "price": {
+            "type": "number",
+            "description": "Product price in USD",
+            "example": 599.99
+          },
+          "categoryId": {
+            "type": "string",
+            "description": "ID of the product category",
+            "example": "507f1f77bcf86cd799439011"
+          },
+          "brandId": {
+            "type": "string",
+            "description": "ID of the product brand",
+            "example": "507f1f77bcf86cd799439012"
+          },
+          "stock": {
+            "type": "integer",
+            "description": "Available stock quantity",
+            "example": 100
+          },
+          "imageUrl": {
+            "type": "string",
+            "description": "URL of the product image",
+            "example": "https://example.com/images/smartphone.jpg"
+          }
+        }
+      }
+    }
+  ],
 				"responses": {
 					"201": {
 						"description": "Created"
@@ -891,111 +925,79 @@
 			}
 		},
 		"/auth/register": {
-			"post": {
-				"description": "Create a new user account and return access/refresh tokens",
-				"parameters": [
-					{
-						"name": "body",
-						"in": "body",
-						"schema": {
-							"type": "object",
-							"properties": {
-								"email": {
-									"type": "string",
-									"example": "user@example.com"
-								},
-								"password": {
-									"type": "string",
-									"example": "password123"
-								},
-								"name": {
-									"type": "string",
-									"example": "John Doe"
-								},
-								"address": {
-									"type": "string",
-									"example": "123 Street"
-								},
-								"phone": {
-									"type": "string",
-									"example": "1234567890"
-								},
-								"avatar": {
-									"type": "string",
-									"example": "https://example.com/avatar.jpg"
-								},
-								"date_of_birth": {
-									"type": "string",
-									"example": "1990-01-01"
-								},
-								"role": {
-									"type": "string",
-									"example": "user"
-								}
-							}
-						}
-					}
-				],
-				"responses": {
-					"201": {
-						"description": "Created",
-						"schema": {
-							"type": "object",
-							"properties": {
-								"success": {
-									"type": "boolean",
-									"example": true
-								},
-								"statusCode": {
-									"type": "integer",
-									"example": 201
-								},
-								"message": {
-									"type": "string",
-									"example": "Đăng ký thành công"
-								},
-								"data": {
-									"type": "object",
-									"properties": {
-										"user": {
-											"type": "object",
-											"properties": {
-												"id": {
-													"type": "string",
-													"example": "507f1f77bcf86cd799439011"
-												},
-												"email": {
-													"type": "string",
-													"example": "user@example.com"
-												},
-												"role": {
-													"type": "string",
-													"example": "user"
-												}
-											}
-										},
-										"accessToken": {
-											"type": "string",
-											"example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-										},
-										"refreshToken": {
-											"type": "string",
-											"example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-										}
-									}
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Bad Request"
-					}
-				}
-			}
-		},
+  "post": {
+    "description": "Create a new user account and return access/refresh tokens",
+    "parameters": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "schema": {
+          "type": "object",
+          "required": ["email", "password"],
+          "properties": {
+            "email": { "type": "string", "example": "tuu@example.com" },
+            "password": { "type": "string", "example": "Password123!" },
+            "name": { "type": "string", "example": "John Doe" },
+            "address": { "type": "string", "example": "123 Street" },
+            "phone": { "type": "string", "example": "0987654321" },
+            "avatar": { "type": "string", "example": "https://example.com/avatar.jpg" },
+            "date_of_birth": { "type": "string", "example": "1990-01-01" },
+            "role": { "type": "string", "example": "user" }
+          }
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "OK",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "success": { "type": "boolean", "example": true },
+            "statusCode": { "type": "integer", "example": 200 },
+            "message": { "type": "string", "example": "Đăng ký thành công" },
+            "data": {
+              "type": "object",
+              "properties": {
+                "user": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string", "example": "68367c5d9f9a3d192ec7262e" },
+                    "email": { "type": "string", "example": "tuu@example.com" },
+                    "role": { "type": "string", "example": "user" }
+                  }
+                },
+                "accessToken": { "type": "string", "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." },
+                "refreshToken": { "type": "string", "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Bad Request",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "success": { "type": "boolean", "example": false },
+            "statusCode": { "type": "integer", "example": 400 },
+            "message": { "type": "string", "example": "Invalid input data" }
+          }
+        }
+      }
+    }
+  }
+},
 		"/auth/login": {
 			"post": {
+				
 				"description": "Authenticate user and return access/refresh tokens",
+				"security": [
+					{
+						"BearerAuth": []
+					}
+				],
 				"parameters": [
 					{
 						"name": "body",
@@ -1055,11 +1057,11 @@
 										},
 										"accessToken": {
 											"type": "string",
-											"example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+											"example": ""
 										},
 										"refreshToken": {
 											"type": "string",
-											"example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+											"example": ""
 										}
 									}
 								}
@@ -1332,6 +1334,407 @@
 					}
 				}
 			}
-		}
+		},
+		
+  "/cart/add": {
+    "post": {
+      "description": "Thêm sản phẩm vào giỏ hàng của người dùng",
+      "security": [
+        {
+          "BearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "body",
+          "in": "body",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "required": ["productId", "quantity"],
+            "properties": {
+              "productId": {
+                "type": "string",
+                "description": "ID của sản phẩm",
+                "example": "507f1f77bcf86cd799439011"
+              },
+              "quantity": {
+                "type": "integer",
+                "description": "Số lượng sản phẩm",
+                "example": 2
+              }
+            }
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "OK",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean", "example": true },
+              "statusCode": { "type": "integer", "example": 200 },
+              "message": { "type": "string", "example": "Thêm sản phẩm vào giỏ hàng thành công" },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "userId": { "type": "string", "example": "68367c5d9f9a3d192ec7262e" },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "productId": {
+                          "type": "object",
+                          "properties": {
+                            "_id": { "type": "string", "example": "507f1f77bcf86cd799439011" },
+                            "title": { "type": "string", "example": "Smartphone XYZ" },
+                            "price": { "type": "number", "example": 599.99 }
+                          }
+                        },
+                        "quantity": { "type": "integer", "example": 2 }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Bad Request",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean", "example": false },
+              "statusCode": { "type": "integer", "example": 400 },
+              "message": { "type": "string", "example": "Số lượng không hợp lệ" }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthorized",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean", "example": false },
+              "statusCode": { "type": "integer", "example": 401 },
+              "message": { "type": "string", "example": "Không có token xác thực" }
+            }
+          }
+        },
+        "404": {
+          "description": "Not Found",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean", "example": false },
+              "statusCode": { "type": "integer", "example": 404 },
+              "message": { "type": "string", "example": "Sản phẩm không tồn tại" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/cart": {
+    "get": {
+      "description": "Lấy giỏ hàng của người dùng",
+      "security": [
+        {
+          "BearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "OK",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean", "example": true },
+              "statusCode": { "type": "integer", "example": 200 },
+              "message": { "type": "string", "example": "Lấy giỏ hàng thành công" },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "userId": { "type": "string", "example": "68367c5d9f9a3d192ec7262e" },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "productId": {
+                          "type": "object",
+                          "properties": {
+                            "_id": { "type": "string", "example": "507f1f77bcf86cd799439011" },
+                            "title": { "type": "string", "example": "Smartphone XYZ" },
+                            "price": { "type": "number", "example": 599.99 }
+                          }
+                        },
+                        "quantity": { "type": "integer", "example": 2 }
+                      }
+                    }
+                  },
+                  "totalPrice": { "type": "number", "example": 1199.98 }
+                }
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthorized",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean", "example": false },
+              "statusCode": { "type": "integer", "example": 401 },
+              "message": { "type": "string", "example": "Không có token xác thực" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/cart/update": {
+    "patch": {
+      "description": "Cập nhật số lượng sản phẩm trong giỏ hàng",
+      "security": [
+        {
+          "BearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "body",
+          "in": "body",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "required": ["productId", "quantity"],
+            "properties": {
+              "productId": {
+                "type": "string",
+                "description": "ID của sản phẩm",
+                "example": "507f1f77bcf86cd799439011"
+              },
+              "quantity": {
+                "type": "integer",
+                "description": "Số lượng mới",
+                "example": 3
+              }
+            }
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "OK",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean", "example": true },
+              "statusCode": { "type": "integer", "example": 200 },
+              "message": { "type": "string", "example": "Cập nhật giỏ hàng thành công" },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "userId": { "type": "string", "example": "68367c5d9f9a3d192ec7262e" },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "productId": {
+                          "type": "object",
+                          "properties": {
+                            "_id": { "type": "string", "example": "507f1f77bcf86cd799439011" },
+                            "title": { "type": "string", "example": "Smartphone XYZ" },
+                            "price": { "type": "number", "example": 599.99 }
+                          }
+                        },
+                        "quantity": { "type": "integer", "example": 3 }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Bad Request",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean", "example": false },
+              "statusCode": { "type": "integer", "example": 400 },
+              "message": { "type": "string", "example": "Số lượng không hợp lệ" }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthorized",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean", "example": false },
+              "statusCode": { "type": "integer", "example": 401 },
+              "message": { "type": "string", "example": "Không có token xác thực" }
+            }
+          }
+        },
+        "404": {
+          "description": "Not Found",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean", "example": false },
+              "statusCode": { "type": "integer", "example": 404 },
+              "message": { "type": "string", "example": "Sản phẩm không có trong giỏ hàng" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/cart/remove": {
+    "delete": {
+      "description": "Xóa sản phẩm khỏi giỏ hàng",
+      "security": [
+        {
+          "BearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "body",
+          "in": "body",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "required": ["productId"],
+            "properties": {
+              "productId": {
+                "type": "string",
+                "description": "ID của sản phẩm",
+                "example": "507f1f77bcf86cd799439011"
+              }
+            }
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "OK",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean", "example": true },
+              "statusCode": { "type": "integer", "example": 200 },
+              "message": { "type": "string", "example": "Xóa sản phẩm khỏi giỏ hàng thành công" },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "userId": { "type": "string", "example": "68367c5d9f9a3d192ec7262e" },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "productId": { "type": "string", "example": "507f1f77bcf86cd799439012" },
+                        "quantity": { "type": "integer", "example": 1 }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthorized",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean", "example": false },
+              "statusCode": { "type": "integer", "example": 401 },
+              "message": { "type": "string", "example": "Không có token xác thực" }
+            }
+          }
+        },
+        "404": {
+          "description": "Not Found",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean", "example": false },
+              "statusCode": { "type": "integer", "example": 404 },
+              "message": { "type": "string", "example": "Sản phẩm không có trong giỏ hàng" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/cart/clear": {
+    "delete": {
+      "description": "Xóa toàn bộ giỏ hàng",
+      "security": [
+        {
+          "BearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "OK",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean", "example": true },
+              "statusCode": { "type": "integer", "example": 200 },
+              "message": { "type": "string", "example": "Xóa toàn bộ giỏ hàng thành công" },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "userId": { "type": "string", "example": "68367c5d9f9a3d192ec7262e" },
+                  "items": {
+                    "type": "array",
+                    "items": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthorized",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean", "example": false },
+              "statusCode": { "type": "integer", "example": 401 },
+              "message": { "type": "string", "example": "Không có token xác thực" }
+            }
+          }
+        },
+        "404": {
+          "description": "Not Found",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean", "example": false },
+              "statusCode": { "type": "integer", "example": 404 },
+              "message": { "type": "string", "example": "Giỏ hàng không tồn tại" }
+            }
+          }
+        }
+      }
+    }
+  }
+
+		
+		
 	}
+	
 }
