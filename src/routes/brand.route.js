@@ -1,15 +1,35 @@
-import express from "express";
-import BrandController from "../controllers/BrandController.js";
+import { Router } from "express";
+import {
+  getBrands,
+  getBrandById,
+  createBrand,
+  updateBrand,
+  deleteBrand,
+  softDeleteBrand,
+  restoreBrand,
+} from "../controllers/BrandController.js";
 
+const brandRouter = Router();
 
-const router = express.Router();
+// Lấy tất cả thương hiệu
+brandRouter.get("/", getBrands);
 
-router.get("/", BrandController.getAll);
-router.get("/:id", BrandController.getById);
-router.post("/", BrandController.create);
-router.patch("/:id", BrandController.update);
-router.delete("/:id", BrandController.delete);
-router.delete("/soft-delete/:id", BrandController.softDelete);
-router.patch("/restore/:id", BrandController.restore);
+// Tạo thương hiệu mới
+brandRouter.post("/", createBrand);
 
-export default router;
+// Lấy thương hiệu theo id
+brandRouter.get("/:id", getBrandById);
+
+// Cập nhật thương hiệu
+brandRouter.patch("/:id", updateBrand);
+
+// Xóa vĩnh viễn thương hiệu
+brandRouter.delete("/:id", deleteBrand);
+
+// Xóa mềm thương hiệu
+brandRouter.patch("/deactivate/:id", softDeleteBrand);
+
+// Khôi phục thương hiệu
+brandRouter.patch("/restore/:id", restoreBrand);
+
+export default brandRouter;

@@ -1,4 +1,5 @@
-import { Router } from "express";
+import express from "express";
+import { authenticate, isAdmin } from "../middlewares/authMiddleware.js";
 import {
   getProducts,
   getProductById,
@@ -9,27 +10,18 @@ import {
   restoreProduct,
 } from "../controllers/ProductController.js";
 
-const productRouter = Router();
 
-// Lấy tất cả sản phẩm, có thể dùng query ?includeDeleted=true để lấy cả sản phẩm đã soft-delete
-productRouter.get("/", getProducts);
+const router = express.Router();
 
-// Tạo sản phẩm mới
-productRouter.post("/", createProduct);
+// Không yêu cầu auth để xem danh sách hoặc chi tiết sản phẩm
+router.get("/", getProducts);
+router.get("/:id", getProductById);
 
-// Lấy sản phẩm theo id
-productRouter.get("/:id", getProductById);
+// Yêu cầu auth và quyền admin để tạo/sửa/xóa
+router.post("/", authenticate, isAdmin, createProduct);
+router.patch("/:id", authenticate, isAdmin, updateProduct);
+router.delete("/:id", authenticate, isAdmin, deleteProduct);
+router.patch("/:id/soft-delete", authenticate, isAdmin, softDeleteProduct);
+router.patch("/:id/restore", authenticate, isAdmin, restoreProduct);
 
-// Cập nhật sản phẩm theo id
-productRouter.patch("/:id", updateProduct);
-
-// Xóa sản phẩm vĩnh viễn
-productRouter.delete("/:id", deleteProduct);
-
-// Xóa mềm (soft-delete) sản phẩm
-productRouter.delete("/soft-delete/:id", softDeleteProduct);
-
-// Khôi phục sản phẩm đã soft-delete
-productRouter.patch("/restore/:id", restoreProduct);
-
-export default productRouter;
+export default router;

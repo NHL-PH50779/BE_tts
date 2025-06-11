@@ -1,14 +1,35 @@
-import express from "express";
-import CategoryController from "../controllers/CategoryController.js";
+import { Router } from "express";
+import {
+  getCategories,
+  getCategoryById,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+  softDeleteCategory,
+  restoreCategory,
+} from "../controllers/CategoryController.js";
 
-const router = express.Router();
+const categoryRouter = Router();
 
-router.get("/", CategoryController.getAll);
-router.get("/:id", CategoryController.getById);
-router.post("/", CategoryController.create);
-router.patch("/:id", CategoryController.update);
-router.delete("/:id", CategoryController.delete);
-router.delete("/soft-delete/:id", CategoryController.softDelete);
-router.patch("/restore/:id", CategoryController.restore);
+// Lấy tất cả danh mục
+categoryRouter.get("/", getCategories);
 
-export default router;
+// Tạo danh mục mới
+categoryRouter.post("/", createCategory);
+
+// Lấy danh mục theo id
+categoryRouter.get("/:id", getCategoryById);
+
+// Cập nhật danh mục
+categoryRouter.patch("/:id", updateCategory);
+
+// Xóa vĩnh viễn danh mục
+categoryRouter.delete("/:id", deleteCategory);
+
+// Xóa mềm danh mục
+categoryRouter.patch("/deactivate/:id", softDeleteCategory);
+
+// Khôi phục danh mục
+categoryRouter.patch("/restore/:id", restoreCategory);
+
+export default categoryRouter;

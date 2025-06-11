@@ -1,71 +1,173 @@
 import Category from "../models/Category.js";
 
-const CategoryController = {
-  getAll: async (req, res) => {
-    try {
-      const categories = await Category.find();
-      res.json(categories);
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  },
+// Lấy tất cả danh mục, hỗ trợ pagination, search, và includeDeleted
+export const getCategories = async (req, res, next) => {
+  try {
+    // Check query parameters
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search || "";
+    const includeDeleted = req.query.includeDeleted;
 
-  getById: async (req, res) => {
-    try {
-      const category = await Category.findById(req.params.id);
-      if (!category) return res.status(404).json({ message: "Category not found" });
-      res.json(category);
-    } catch (error) {
-      res.status(500).json({ message: error.message });
+    if (page < 1 || limit < 1) {
+      const error = new Error("Page và limit phải là số dương");
+      error.statusCode = 400;
+      throw error;
     }
-  },
+    if (search.length > 100) {
+      const error = new Error("Chuỗi tìm kiếm quá dài");
+      error.statusCode = 400;
+      throw error;
+    }
+    if (includeDeleted && !["true", "false"].includes(includeDeleted)) {
+      const error = new Error("includeDeleted phải là 'true' hoặc 'false'");
+      error.statusCode = 400;
+      throw error;
+    }
 
-  create: async (req, res) => {
-    try {
-      const category = await Category.create(req.body);
-      res.status(201).json(category);
-    } catch (error) {
-      res.status(400).json({ message: error.message });
+    // Xây dựng bộ lọc
+    const filter = includeDeleted === "true" ? {} : { is_active: true };
+    if (search) {
+      try {
+        // Ưu tiên dùng text index nếu có
+        filter.$text = { $search: search };
+      } catch (error) {
+        // Nếu không có text index, dùng regex
+        filter.name = { $regex: search, $options: "i" };
+      }
     }
-  },
 
-  update: async (req, res) => {
-    try {
-      const updated = await Category.findByIdAndUpdate(req.params.id, req.body, {
-        new: true,
-      });
-      res.json(updated);
-    } catch (error) {
-      res.status(400).json({ message: error.message });
-    }
-  },
+    // Pagination
+    const skip = (page - 1) * limit;
+    const total = await Category.countDocuments(filter);
+    const categories = await Category.find(filter)
+      .skip(skip)
+      .limit(limit);
 
-  delete: async (req, res) => {
-    try {
-      await Category.findByIdAndDelete(req.params.id);
-      res.json({ message: "Category deleted" });
-    } catch (error) {
-      res.status(500).json({ message: error.message });
+    // Kiểm tra kết quả tìm kiếm
+    if (search && total === 0) {
+      res.success(
+        {
+          categories: [],
+          pagination: { page, limit, total, totalPages: 0 },
+        },
+        "Không tìm thấy danh mục phù hợp"
+      );
+      return;
     }
-  },
 
-  softDelete: async (req, res) => {
-    try {
-      const updated = await Category.findByIdAndUpdate(req.params.id, { is_active: false }, { new: true });
-      res.json(updated);
-    } catch (error) {
-      res.status(400).json({ message: error.message });
-    }
-  },
-
-  restore: async (req, res) => {
-    try {
-      const updated = await Category.findByIdAndUpdate(req.params.id, { is_active: true }, { new: true });
-      res.json(updated);
-    } catch (error) {
-      res.status(400).json({ message: error.message });
-    }
-  },
+    // Trả về dữ liệu với metadata
+    res.success(
+      {
+        categories,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      },
+      "Lấy danh sách danh mục thành công"
+    );
+  } catch (error) {
+    next(error);
+  }
 };
 
-export default CategoryController;
+// Lấy danh mục theo id
+export const getCategoryById = async (req, res, next) => {
+  try {
+    const category = await Category.findById(req.params.id);
+    if (!category) {
+      const error = new Error("Danh mục không tồn tại");
+      error.statusCode = 404;
+      throw error;
+    }
+    res.success(category, "Lấy danh mục thành công");
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Tạo danh mục mới
+export const createCategory = async (req, res, next) => {
+  try {
+    const newCategory = new Category(req.body);
+    const savedCategory = await newCategory.save();
+    res.status(201).success(savedCategory, "Tạo danh mục thành công");
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Cập nhật danh mục theo id
+export const updateCategory = async (req, res, next) => {
+  try {
+    const updatedCategory = await Category.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+    if (!updatedCategory) {
+      const error = new Error("Danh mục không tồn tại");
+      error.statusCode = 404;
+      throw error;
+    }
+    res.success(updatedCategory, "Cập nhật danh mục thành công");
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Xóa danh mục vĩnh viễn
+export const deleteCategory = async (req, res, next) => {
+  try {
+    const deletedCategory = await Category.findByIdAndDelete(req.params.id);
+    if (!deletedCategory) {
+      const error = new Error("Danh mục không tồn tại");
+      error.statusCode = 404;
+      throw error;
+    }
+    res.success(null, "Xóa danh mục thành công");
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Xóa mềm danh mục (is_active = false)
+export const softDeleteCategory = async (req, res, next) => {
+  try {
+    const updatedCategory = await Category.findByIdAndUpdate(
+      req.params.id,
+      { is_active: false },
+      { new: true }
+    );
+    if (!updatedCategory) {
+      const error = new Error("Danh mục không tồn tại");
+      error.statusCode = 404;
+      throw error;
+    }
+    res.success(updatedCategory, "Xóa mềm danh mục thành công");
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Khôi phục danh mục
+export const restoreCategory = async (req, res, next) => {
+  try {
+    const updatedCategory = await Category.findByIdAndUpdate(
+      req.params.id,
+      { is_active: true },
+      { new: true }
+    );
+    if (!updatedCategory) {
+      const error = new Error("Danh mục không tồn tại");
+      error.statusCode = 404;
+      throw error;
+    }
+    res.success(updatedCategory, "Khôi phục danh mục thành công");
+  } catch (error) {
+    next(error);
+  }
+};

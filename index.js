@@ -2,14 +2,18 @@ import express from "express";
 import routes from "./src/routes/index.js";
 import notFoundHandler from "./src/middlewares/notFoundHandler.js";
 import errorHandler from "./src/middlewares/errorHandler.js";
+import successHandler from "./src/middlewares/successHandler.js";
 import cors from "cors";
 import { PORT } from "./src/configs/enviroments.js";
 import jsonValid from "./src/middlewares/jsonInvalid.js";
 import setupSwagger from "./src/configs/swaggerConfig.js";
 import { connectDb } from "./src/configs/db.js";
-
+import dotenv from "dotenv";
+dotenv.config();
 const app = express();
+
 app.use(express.json());
+app.use(successHandler); // Gắn middleware custom res.success
 
 connectDb();
 
@@ -17,7 +21,6 @@ app.use(
 	cors({
 		origin: ["http://localhost:5173", "http://localhost:5174"],
 		credentials: true,
-		// Them cac cau hinh can thiet
 	})
 );
 
