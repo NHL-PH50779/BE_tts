@@ -7,7 +7,7 @@ import {
   removeFromCart,
   clearCart,
   getCartCount
-} from "../controllers/cartController.js";
+} from "../controllers/CartController.js";
 
 const cartRouter = Router();
 

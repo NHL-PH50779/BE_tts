@@ -456,6 +456,12 @@
 			},
 			"post": {
   "description": "Create a new product",
+  "security": [
+					{
+						"BearerAuth": []
+					}
+				],
+  
   "parameters": [
     {
       "name": "body",

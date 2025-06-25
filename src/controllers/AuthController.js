@@ -1,12 +1,20 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
-import Token from "../models/Token.js";
 import Role from "../models/Role.js";
 
 // Đăng ký người dùng
 export const register = async (req, res, next) => {
   try {
-    const { email, password, name, address, phone, avatar, date_of_birth, role } = req.body;
+    const {
+      email,
+      password,
+      name,
+      address,
+      phone,
+      avatar,
+      date_of_birth,
+      role,
+    } = req.body;
 
     // Kiểm tra email đã tồn tại
     const existingUser = await User.findOne({ email });
@@ -47,21 +55,19 @@ export const register = async (req, res, next) => {
       { expiresIn: "7d" }
     );
 
-    // Lưu tokens
-    await Token.create({
-      user_id: user._id,
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    });
-
-    res.status(201).success(
-      {
-        user: { id: user._id, email: user.email, role: roleDoc.name },
+    res.status(201).json({
+      success: true,
+      message: "Đăng ký thành công",
+      data: {
+        user: {
+          id: user._id,
+          email: user.email,
+          role: roleDoc.name,
+        },
         accessToken,
         refreshToken,
       },
-      "Đăng ký thành công"
-    );
+    });
   } catch (error) {
     next(error);
   }
@@ -100,27 +106,25 @@ export const login = async (req, res, next) => {
       { expiresIn: "7d" }
     );
 
-    // Lưu tokens
-    await Token.create({
-      user_id: user._id,
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    });
-
-    res.success(
-      {
-        user: { id: user._id, email: user.email, role: user.role_id.name },
+    res.json({
+      success: true,
+      message: "Đăng nhập thành công",
+      data: {
+        user: {
+          id: user._id,
+          email: user.email,
+          role: user.role_id.name,
+        },
         accessToken,
         refreshToken,
       },
-      "Đăng nhập thành công"
-    );
+    });
   } catch (error) {
     next(error);
   }
 };
 
-// Refresh token
+// Làm mới access token
 export const refreshToken = async (req, res, next) => {
   try {
     const { refreshToken } = req.body;
@@ -128,14 +132,6 @@ export const refreshToken = async (req, res, next) => {
     if (!refreshToken) {
       const error = new Error("Refresh token là bắt buộc");
       error.statusCode = 400;
-      throw error;
-    }
-
-    // Kiểm tra refresh token
-    const tokenDoc = await Token.findOne({ refresh_token: refreshToken });
-    if (!tokenDoc) {
-      const error = new Error("Refresh token không hợp lệ");
-      error.statusCode = 401;
       throw error;
     }
 
@@ -149,22 +145,21 @@ export const refreshToken = async (req, res, next) => {
       { expiresIn: "1h" }
     );
 
-    // Cập nhật access token
-    tokenDoc.access_token = accessToken;
-    tokenDoc.updatedAt = Date.now();
-    await tokenDoc.save();
-
-    res.success({ accessToken }, "Tạo access token mới thành công");
+    res.json({
+      success: true,
+      message: "Tạo access token mới thành công",
+      data: { accessToken },
+    });
   } catch (error) {
     if (error.name === "TokenExpiredError") {
       const err = new Error("Refresh token đã hết hạn");
       err.statusCode = 401;
-      throw err;
+      return next(err);
     }
     if (error.name === "JsonWebTokenError") {
       const err = new Error("Refresh token không hợp lệ");
       err.statusCode = 401;
-      throw err;
+      return next(err);
     }
     next(error);
   }

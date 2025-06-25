@@ -1,8 +1,9 @@
 import jwt from "jsonwebtoken";
+import dotenv from 'dotenv';
+dotenv.config(); 
 
 export const authenticate = async (req, res, next) => {
   try {
-    // Lấy token từ header
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) {
       const error = new Error("Yêu cầu token xác thực");
@@ -10,8 +11,7 @@ export const authenticate = async (req, res, next) => {
       throw error;
     }
 
-    // Xác minh token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET); // Nếu JWT_SECRET undefined => verify sai
     req.user = { userId: decoded.userId, role: decoded.role };
 
     next();

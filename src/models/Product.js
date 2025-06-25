@@ -4,7 +4,7 @@ const productSchema = new mongoose.Schema({
   name: String,
   slug: String,
   image: String,
-  price: { type: Number, required: true }, // ← THÊM DÒNG NÀY
+  price: { type: Number, required: true }, 
   brand_id: { type: mongoose.Schema.Types.ObjectId, ref: "Brand" },
   description: { type: String, required: true },
   category_id: { type: mongoose.Schema.Types.ObjectId, ref: "Category", required: true },
