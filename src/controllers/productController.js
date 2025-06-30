@@ -1,4 +1,8 @@
 import Product from "../models/Product.js";
+import Variant from "../models/Variant.js"; // Thêm dòng này ở đầu
+import cloudinary from "../utils/Cloudinary.js";
+
+
 
 // Lấy tất cả sản phẩm, hỗ trợ pagination, search, và includeDeleted
 export const getProducts = async (req, res, next) => {
@@ -99,43 +103,72 @@ export const getProductById = async (req, res, next) => {
       throw error;
     }
 
-    res.success(product, "Lấy sản phẩm thành công");
+    const variants = await Variant.find({ product_id: product._id, is_active: true })
+      .populate("attributes.attribute_id", "name")  // Nếu bạn dùng ref ở đây
+      .populate("attributes.value_id", "value");    // Nếu bạn dùng ref ở đây
+
+    res.success({ product, variants }, "Lấy sản phẩm thành công");
   } catch (error) {
     next(error);
   }
 };
 
+
 // Tạo sản phẩm mới
 export const createProduct = async (req, res, next) => {
   try {
-    const newProduct = new Product(req.body);
-    const savedProduct = await newProduct.save();
+    const data = req.body;
+
+    // ✅ Xem log kiểm tra file
+    console.log("REQ FILE:", req.file);
+
+    if (req.file && req.file.path) {
+      data.image = req.file.path; 
+    }
+
+    const product = new Product(data);
+    const savedProduct = await product.save();
+
     res.status(201).success(savedProduct, "Tạo sản phẩm thành công");
   } catch (error) {
     next(error);
   }
 };
 
-// Cập nhật sản phẩm theo id
+
+
+
+// ✅ Cập nhật sản phẩm theo id và cập nhật ảnh nếu có
 export const updateProduct = async (req, res, next) => {
   try {
-    const updatedProduct = await Product.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
+    const data = req.body;
+    const productId = req.params.id;
 
-    if (!updatedProduct) {
+    const product = await Product.findById(productId);
+    if (!product) {
       const error = new Error("Sản phẩm không tồn tại");
       error.statusCode = 404;
       throw error;
     }
 
-    res.success(updatedProduct, "Cập nhật sản phẩm thành công");
+    // Nếu có file mới => gán đường dẫn ảnh
+    if (req.file && req.file.path) {
+      data.image = req.file.path;
+    }
+
+    const updated = await Product.findByIdAndUpdate(
+      productId,
+      data,
+      { new: true, runValidators: true }
+    );
+
+    res.success(updated, "Cập nhật sản phẩm thành công");
   } catch (error) {
     next(error);
   }
 };
+
+
 
 // Xóa sản phẩm vĩnh viễn
 export const deleteProduct = async (req, res, next) => {
@@ -194,4 +227,6 @@ export const restoreProduct = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+
+  
 };

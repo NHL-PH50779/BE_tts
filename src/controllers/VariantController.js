@@ -1,6 +1,6 @@
 import Variant from "../models/Variant.js";
 import Product from "../models/Product.js";
-
+import AttributeValue from "../models/AttributeValue.js";
 // Lấy tất cả biến thể, hỗ trợ pagination, search, và includeDeleted
 export const getVariants = async (req, res, next) => {
   try {
@@ -98,21 +98,86 @@ export const getVariantById = async (req, res, next) => {
 // Tạo biến thể mới
 export const createVariant = async (req, res, next) => {
   try {
-    // Kiểm tra sản phẩm tồn tại
-    const product = await Product.findById(req.body.product_id);
+    const { product_id, price, stock, sku, name, attribute_value_ids } = req.body;
+
+    // ✅ 1. Kiểm tra sản phẩm tồn tại
+    const product = await Product.findById(product_id);
     if (!product) {
-      const error = new Error("Sản phẩm không tồn tại");
-      error.statusCode = 404;
-      throw error;
+      return res.status(404).json({
+        success: false,
+        message: "Sản phẩm không tồn tại",
+      });
     }
 
-    const newVariant = new Variant(req.body);
-    const savedVariant = await newVariant.save();
-    res.status(201).success(savedVariant, "Tạo biến thể thành công");
+    // ✅ 2. Lấy các AttributeValue và populate attribute_id
+    const values = await AttributeValue.find({ _id: { $in: attribute_value_ids } }).populate("attribute_id");
+    if (values.length !== attribute_value_ids.length) {
+      return res.status(400).json({
+        success: false,
+        message: "Một hoặc nhiều giá trị thuộc tính không tồn tại",
+      });
+    }
+
+    // ✅ 3. Kiểm tra không có 2 giá trị cho cùng 1 thuộc tính
+    const seenAttributes = new Set();
+    for (const val of values) {
+      const attrId = val.attribute_id._id.toString();
+      if (seenAttributes.has(attrId)) {
+        return res.status(400).json({
+          success: false,
+          message: "Không được chọn nhiều giá trị cho cùng một thuộc tính",
+        });
+      }
+      seenAttributes.add(attrId);
+    }
+
+    // ✅ 4. Kiểm tra biến thể trùng tổ hợp
+    const existingVariants = await Variant.find({ product_id });
+
+    for (const variant of existingVariants) {
+      const existingAttrIds = variant.attributes.map(id => id.toString()).sort();
+      const incomingAttrIds = attribute_value_ids.map(id => id.toString()).sort();
+
+      const isDuplicate = JSON.stringify(existingAttrIds) === JSON.stringify(incomingAttrIds);
+      if (isDuplicate) {
+        return res.status(400).json({
+          success: false,
+          message: "Biến thể với tổ hợp thuộc tính này đã tồn tại",
+        });
+      }
+    }
+
+    // ✅ 5. Tạo mới
+    const newVariant = new Variant({
+      product_id,
+      price,
+      stock,
+      sku,
+      name,
+      attributes: attribute_value_ids,
+    });
+
+    const saved = await newVariant.save();
+    const populated = await Variant.findById(saved._id)
+      .populate("product_id", "name")
+      .populate({
+        path: "attributes",
+        populate: { path: "attribute_id", select: "name" }
+      });
+
+    res.status(201).json({
+      success: true,
+      message: "Tạo biến thể thành công",
+      data: populated
+    });
   } catch (error) {
     next(error);
   }
 };
+
+
+
+
 
 // Cập nhật biến thể theo id
 export const updateVariant = async (req, res, next) => {

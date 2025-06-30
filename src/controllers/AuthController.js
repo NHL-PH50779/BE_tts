@@ -1,6 +1,10 @@
 import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
 import User from "../models/User.js";
 import Role from "../models/Role.js";
+import Cart from "../models/Cart.js";
+
+dotenv.config();
 
 // Đăng ký người dùng
 export const register = async (req, res, next) => {
@@ -16,7 +20,6 @@ export const register = async (req, res, next) => {
       role,
     } = req.body;
 
-    // Kiểm tra email đã tồn tại
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       const error = new Error("Email đã được sử dụng");
@@ -24,13 +27,11 @@ export const register = async (req, res, next) => {
       throw error;
     }
 
-    // Tìm hoặc tạo role
     let roleDoc = await Role.findOne({ name: role || "user" });
     if (!roleDoc) {
       roleDoc = await Role.create({ name: role || "user" });
     }
 
-    // Tạo người dùng mới
     const user = new User({
       email,
       password,
@@ -43,7 +44,14 @@ export const register = async (req, res, next) => {
     });
     await user.save();
 
-    // Tạo tokens
+    if (!user._id) {
+      const error = new Error("Không thể tạo giỏ hàng: userId không hợp lệ");
+      error.statusCode = 500;
+      throw error;
+    }
+
+    await Cart.create({ user_id: user._id }); // Sử dụng user_id hoặc userId tùy theo schema
+
     const accessToken = jwt.sign(
       { userId: user._id, role: roleDoc.name },
       process.env.JWT_SECRET,
@@ -69,6 +77,12 @@ export const register = async (req, res, next) => {
       },
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: "Không thể tạo giỏ hàng: user_id đã tồn tại",
+      });
+    }
     next(error);
   }
 };
@@ -78,7 +92,6 @@ export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    // Kiểm tra người dùng
     const user = await User.findOne({ email, is_active: true }).populate("role_id");
     if (!user) {
       const error = new Error("Email hoặc mật khẩu không đúng");
@@ -86,7 +99,6 @@ export const login = async (req, res, next) => {
       throw error;
     }
 
-    // Kiểm tra mật khẩu
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       const error = new Error("Email hoặc mật khẩu không đúng");
@@ -94,7 +106,6 @@ export const login = async (req, res, next) => {
       throw error;
     }
 
-    // Tạo tokens
     const accessToken = jwt.sign(
       { userId: user._id, role: user.role_id.name },
       process.env.JWT_SECRET,
@@ -135,10 +146,8 @@ export const refreshToken = async (req, res, next) => {
       throw error;
     }
 
-    // Xác minh refresh token
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
 
-    // Tạo access token mới
     const accessToken = jwt.sign(
       { userId: decoded.userId, role: decoded.role },
       process.env.JWT_SECRET,
@@ -152,14 +161,10 @@ export const refreshToken = async (req, res, next) => {
     });
   } catch (error) {
     if (error.name === "TokenExpiredError") {
-      const err = new Error("Refresh token đã hết hạn");
-      err.statusCode = 401;
-      return next(err);
+      return next(new Error("Refresh token đã hết hạn"));
     }
     if (error.name === "JsonWebTokenError") {
-      const err = new Error("Refresh token không hợp lệ");
-      err.statusCode = 401;
-      return next(err);
+      return next(new Error("Refresh token không hợp lệ"));
     }
     next(error);
   }

@@ -30,11 +30,11 @@ const variantSchema = new mongoose.Schema(
       ref: "Product",
       required: [true, "ID sản phẩm là bắt buộc"],
     },
-    attributes: {
-      type: Map,
-      of: String,
-      default: {},
-    },
+    attributes: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AttributeValue",
+      required: true
+    }],
     is_active: {
       type: Boolean,
       default: true,
@@ -42,13 +42,10 @@ const variantSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-    collection: "product_variants", // Explicitly set collection name
+    collection: "product_variants",
   }
 );
 
-// Tạo text index cho tìm kiếm
 variantSchema.index({ name: "text", sku: "text" });
 
-const Variant = mongoose.model("Variant", variantSchema);
-
-export default Variant;
+export default mongoose.model("Variant", variantSchema);
