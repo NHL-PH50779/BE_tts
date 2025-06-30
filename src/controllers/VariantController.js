@@ -31,11 +31,11 @@ export const getVariants = async (req, res, next) => {
     const filter = includeDeleted === "true" ? {} : { is_active: true };
     if (productId) {
       filter.product_id = productId;
-    } 
+    }
     if (search) {
       filter.$or = [
         { sku: { $regex: search, $options: "i" } },
-        { name: { $regex: search, $options: "i" } }
+        { name: { $regex: search, $options: "i" } },
       ];
     }
 
@@ -80,8 +80,10 @@ export const getVariants = async (req, res, next) => {
 // Lấy biến thể theo id
 export const getVariantById = async (req, res, next) => {
   try {
-    const variant = await Variant.findById(req.params.id)
-      .populate("product_id", "name");
+    const variant = await Variant.findById(req.params.id).populate(
+      "product_id",
+      "name"
+    );
 
     if (!variant) {
       const error = new Error("Biến thể không tồn tại");
@@ -98,7 +100,8 @@ export const getVariantById = async (req, res, next) => {
 // Tạo biến thể mới
 export const createVariant = async (req, res, next) => {
   try {
-    const { product_id, price, stock, sku, name, attribute_value_ids } = req.body;
+    const { product_id, price, stock, sku, name, attribute_value_ids } =
+      req.body;
 
     // ✅ 1. Kiểm tra sản phẩm tồn tại
     const product = await Product.findById(product_id);
@@ -110,7 +113,9 @@ export const createVariant = async (req, res, next) => {
     }
 
     // ✅ 2. Lấy các AttributeValue và populate attribute_id
-    const values = await AttributeValue.find({ _id: { $in: attribute_value_ids } }).populate("attribute_id");
+    const values = await AttributeValue.find({
+      _id: { $in: attribute_value_ids },
+    }).populate("attribute_id");
     if (values.length !== attribute_value_ids.length) {
       return res.status(400).json({
         success: false,
@@ -135,10 +140,15 @@ export const createVariant = async (req, res, next) => {
     const existingVariants = await Variant.find({ product_id });
 
     for (const variant of existingVariants) {
-      const existingAttrIds = variant.attributes.map(id => id.toString()).sort();
-      const incomingAttrIds = attribute_value_ids.map(id => id.toString()).sort();
+      const existingAttrIds = variant.attributes
+        .map((id) => id.toString())
+        .sort();
+      const incomingAttrIds = attribute_value_ids
+        .map((id) => id.toString())
+        .sort();
 
-      const isDuplicate = JSON.stringify(existingAttrIds) === JSON.stringify(incomingAttrIds);
+      const isDuplicate =
+        JSON.stringify(existingAttrIds) === JSON.stringify(incomingAttrIds);
       if (isDuplicate) {
         return res.status(400).json({
           success: false,
@@ -162,22 +172,18 @@ export const createVariant = async (req, res, next) => {
       .populate("product_id", "name")
       .populate({
         path: "attributes",
-        populate: { path: "attribute_id", select: "name" }
+        populate: { path: "attribute_id", select: "name" },
       });
 
     res.status(201).json({
       success: true,
       message: "Tạo biến thể thành công",
-      data: populated
+      data: populated,
     });
   } catch (error) {
     next(error);
   }
 };
-
-
-
-
 
 // Cập nhật biến thể theo id
 export const updateVariant = async (req, res, next) => {

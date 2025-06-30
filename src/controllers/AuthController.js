@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import User from "../models/User.js";
 import Role from "../models/Role.js";
 import Cart from "../models/Cart.js";
-
+import Wallet from "../models/Wallet.js";
 dotenv.config();
 
 // Đăng ký người dùng
@@ -51,12 +51,8 @@ export const register = async (req, res, next) => {
     }
 
     await Cart.create({ user_id: user._id }); // Sử dụng user_id hoặc userId tùy theo schema
-
-    const accessToken = jwt.sign(
-      { userId: user._id, role: roleDoc.name },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+    await Wallet.create({ user_id: user._id });
+  
     const refreshToken = jwt.sign(
       { userId: user._id, role: roleDoc.name },
       process.env.JWT_REFRESH_SECRET,
@@ -72,7 +68,6 @@ export const register = async (req, res, next) => {
           email: user.email,
           role: roleDoc.name,
         },
-        accessToken,
         refreshToken,
       },
     });

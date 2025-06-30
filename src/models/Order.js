@@ -7,13 +7,13 @@ const orderSchema = new mongoose.Schema({
     required: true,
   },
   status: {
-    type: String,
-    enum: ["pending", "processing", "shipping", "delivered", "cancelled"],
-    default: "pending",
-  },
+  type: String,
+  enum: ["chờ xác nhận", "đang chuẩn bị hàng", "đang giao", "đã giao", "đã huỷ"],
+  default: "chờ xác nhận",
+},
   shipping_method: {
     type: String,
-    enum: ["standard", "express"],
+    enum: ["giao hàng thông thường", "giao hàng hỏa tốc"],
     required: true,
   },
   shipping_address: {
