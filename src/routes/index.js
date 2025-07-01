@@ -12,9 +12,11 @@ import checkoutRouter from "./checkoutOrder.route.js";
 import adminOrderRouter from "./adminOrder.route.js";
 import walletRouter from "./wallet.route.js";
 import returnRequestRouter from "./returnRequest.route.js";
+import userRouter from "./user.route.js";
 import dotenv from "dotenv";
 dotenv.config();
 const routes = Router();
+
 
 routes.use("/products", productRouter);
 routes.use("/brands", brandRouter);
@@ -29,5 +31,6 @@ routes.use("/checkout", checkoutRouter);
 routes.use("/admin/orders", adminOrderRouter);
 routes.use("/wallet", walletRouter);
 routes.use("/returnrequests", returnRequestRouter);
+routes.use("/users", userRouter);
 
 export default routes;
