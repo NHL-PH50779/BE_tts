@@ -1,25 +1,20 @@
 import nodemailer from "nodemailer";
-import { EMAIL_PASSWORD, EMAIL_USERNAME } from "../configs/enviroments.js";
+import dotenv from "dotenv";
+dotenv.config();
 
-export const sendEmail = async (email, subject, text) => {
-	try {
-		const transporter = nodemailer.createTransport({
-			service: "gmail",
-			auth: {
-				user: EMAIL_USERNAME,
-				pass: EMAIL_PASSWORD,
-			},
-		});
+export const sendMail = async ({ to, subject, html }) => {
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.EMAIL_USERNAME,
+      pass: process.env.EMAIL_PASSWORD,
+    },
+  });
 
-		const mailOptions = {
-			from: EMAIL_USERNAME,
-			to: email,
-			subject: subject,
-			text: text,
-		};
-
-		await transporter.sendMail(mailOptions);
-	} catch (error) {
-		throw new Error("Error sending email: " + error.message);
-	}
+  await transporter.sendMail({
+    from: `"Laptop Shop 👨‍💻" <${process.env.EMAIL_USERNAME}>`,
+    to,
+    subject,
+    html,
+  });
 };

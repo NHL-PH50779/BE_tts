@@ -136,8 +136,6 @@ export const createProduct = async (req, res, next) => {
 };
 
 
-
-
 // ✅ Cập nhật sản phẩm theo id và cập nhật ảnh nếu có
 export const updateProduct = async (req, res, next) => {
   try {

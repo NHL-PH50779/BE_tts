@@ -13,7 +13,9 @@ import adminOrderRouter from "./adminOrder.route.js";
 import walletRouter from "./wallet.route.js";
 import returnRequestRouter from "./returnRequest.route.js";
 import userRouter from "./user.route.js";
+import commentRouter from "./comment.route.js";
 import dotenv from "dotenv";
+
 dotenv.config();
 const routes = Router();
 
@@ -32,5 +34,6 @@ routes.use("/admin/orders", adminOrderRouter);
 routes.use("/wallet", walletRouter);
 routes.use("/returnrequests", returnRequestRouter);
 routes.use("/users", userRouter);
+routes.use("/comments", commentRouter);
 
 export default routes;

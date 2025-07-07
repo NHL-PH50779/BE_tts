@@ -43,9 +43,26 @@ const userSchema = new mongoose.Schema({
   date_of_birth: {
     type: Date,
   },
+  reset_password_otp: {
+  type: String,
+},
+reset_password_expires: {
+  type: Date,
+},
+otp: {
+  type: String,
+},
+otp_expires: {
+  type: Date,
+},
+is_verified: {
+  type: Boolean,
+  default: false,
+},
 }, {
   timestamps: true, // ✅ Tự tạo createdAt và updatedAt
-});
+},
+);
 
 // ✅ Mã hóa mật khẩu trước khi lưu
 userSchema.pre("save", async function (next) {
